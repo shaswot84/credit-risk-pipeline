@@ -1,0 +1,40 @@
+Phase 0: (project setup /init)
+    using uv 
+    creating project dir
+
+    
+
+Phase 1: (dataset)
+    EDA
+    Feature Engineering (if needed)
+    dataset splitting
+
+    findings:
+        output class imbalance
+        marriage, sex doesn't matter. Also research for education too!
+        study of taiwan, so research what happens/(or used happen in 2000s) from april to september in taiwan
+
+
+Phase 2: (model building) (using pytorch)
+    model architecture design (ensembling, bagging)
+
+Phase 3: (model initialization)
+    different weight initialization strategies and optimizers
+    regularization techniques such as Dropout, Batch Normalization, Early Stopping, and Weight Decay
+
+Phase 4: (hyperparameter tuning)
+    using optuna or some lightweight library
+    perfoming tuning on multiple models
+
+Phase 5: (mlfow)
+    exporting the metrics,params, artifcats, models etc. to mlfow
+
+Phase 6: (evaluation)
+    evaluating the model on classification metrics
+
+Phase 7: (model serving)
+    creating an api service using FastAPI that serves the API on appropriate format (serialization)
+    think of the use of pydantic for data validation too
+
+Phase 8: (frontend)
+    using streamlit to fetch the results from the API and display the results
