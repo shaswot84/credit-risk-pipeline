@@ -11,12 +11,57 @@ Phase 1: (dataset)
 
     findings:
         output class imbalance
-        marriage, sex doesn't matter. Also research for education too!
-        study of taiwan, so research what happens/(or used happen in 2000s) from april to september in taiwan
+        
+    new findings:
 
+       
+        PAYMENT_RATIO feature in FE
+
+        can i use robust sccaler on all columns? or a mix of log transformation + robust 
+        scaler
+
+
+        
+
+
+
+        Taiwan’s April–May tax season increases credit card defaults, 
+        prompting banks to predict and manage at-risk customers.
+
+         person's past behavior (payment history, utilization rate) is 
+         always a vastly superior predictor of future default than their 
+         demographics. assign them very low feature importance.
+
+        If Payment Amounts  is higher than the bill amount, it means they paid 
+        off past debt. If it's lower, they are carrying a balance or falling 
+        behind. I SEE HIGH CHANCE OF DOING FEATURE ENGINNERING BY
+        COMAPRING THESE TWO VALUES OVER EACH MONTH, AND COMING UP WITH A METRIC 
+
+        Age Distribution: Plot age. You might notice very few defaults among the 
+        youngest (<20) and oldest (>60) clients, with the peak risk in the 25–40 range.
+    
+    done:
+
+         drop gender and marriage as it often show surprisingly little predictive power, 
+        while education has a slight trend
+
+        education vs default ko plot analyse garni, if necessary drop it too!!!
+
+         person's past behavior (payment history, utilization rate) is 
+         always a vastly superior predictor of future default than their 
+         demographics. assign them very low feature importance.     
 
 Phase 2: (model building) (using pytorch)
     model architecture design (ensembling, bagging)
+
+
+    findings:
+
+        Handling Imbalance in PyTorch: When you build your MLP, you should 
+        pass a weight tensor to the CrossEntropyLoss function to penalize the 
+        model more heavily for misclassifying the minority class (the defaults).
+
+
 
 Phase 3: (model initialization)
     different weight initialization strategies and optimizers
@@ -31,6 +76,18 @@ Phase 5: (mlfow)
 
 Phase 6: (evaluation)
     evaluating the model on classification metrics
+
+
+    findings:
+
+    The Trap: If you use Accuracy as your metric, a dumb model that just 
+    predicts "No Default" every time will be 78% accurate, but it will be 
+    completely useless to the bank
+
+    Metrics: You must evaluate your PyTorch model using Precision, Recall, 
+    F1-Score, and ROC-AUC / PR-AUC
+
+
 
 Phase 7: (model serving)
     creating an api service using FastAPI that serves the API on appropriate format (serialization)
