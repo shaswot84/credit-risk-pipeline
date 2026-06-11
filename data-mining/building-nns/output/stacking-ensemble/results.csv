@@ -1,0 +1,6 @@
+Model,Type,AUC-ROC
+Ensemble (Avg),Ensemble,0.7803196232418258
+RandomForest,Individual,0.7795774994956997
+MLP-B,Individual,0.7772949675413986
+XGBoost,Individual,0.7757562785388127
+MLP-A,Individual,0.7748319190002018

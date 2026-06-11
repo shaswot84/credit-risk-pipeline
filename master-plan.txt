@@ -95,3 +95,35 @@ Phase 7: (model serving)
 
 Phase 8: (frontend)
     using streamlit to fetch the results from the API and display the results
+
+
+
+final Phase (improvements):
+
+    /btw what improvements do you recommend me?
+
+
+
+    3. Fix the ensemble ROC curve cell. RocCurveDisplay.from_predictions() doesn't accept color= — remove it. And the cell still references avg_preds / stacked_preds which no longer exist —
+    change to ensemble_preds.
+
+    Medium effort
+
+    4. Add a calibrated probability threshold per approach. Default 0.5 is arbitrary. Tune threshold on the val set for each model to maximize F1. Add this cell after training in both
+    notebooks.
+
+
+
+    6. Benchmark XGBoost alone as a third approach. It's the strongest individual model in your ensemble (AUC 0.776, recall 0.625). Often XGBoost with proper tuning beats a complex ensemble.
+    Add a minimal notebook that just trains XGBoost with Optuna.
+
+    Process
+
+   
+
+ 
+
+    Architecture
+
+    9. Replace MLP-B in the ensemble. Both MLP-A and MLP-B have near-identical OOF AUC (0.778). Swap MLP-B with a different architecture — try [256, 128, 64] or a wider single-layer net to
+    increase diversity. Higher OOF correlation diversity → better ensemble performance.
