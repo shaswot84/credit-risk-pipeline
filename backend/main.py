@@ -126,20 +126,64 @@ with torch.no_grad():
 with torch.no_grad():
     vanilla_test = torch.sigmoid(vanilla_mlp(X_test_t)).cpu().numpy()
 
-# Confusion matrix (ensemble, thresh=0.5)
+# Confusion matrix — both models
 ens_preds = (ensemble_test >= 0.5).astype(int)
-cm = _confusion_matrix(y_test, ens_preds)
-cm_data = {
+cm_ens = _confusion_matrix(y_test, ens_preds)
+ensemble_cm = {
     "labels": ["Non-Default", "Default"],
-    "matrix": cm.tolist(),
-    "tn": int(cm[0, 0]), "fp": int(cm[0, 1]),
-    "fn": int(cm[1, 0]), "tp": int(cm[1, 1]),
+    "matrix": cm_ens.tolist(),
+    "tn": int(cm_ens[0, 0]), "fp": int(cm_ens[0, 1]),
+    "fn": int(cm_ens[1, 0]), "tp": int(cm_ens[1, 1]),
 }
 
-# Feature importance (from RandomForest — best individual model)
+van_preds = (vanilla_test >= 0.5).astype(int)
+cm_van = _confusion_matrix(y_test, van_preds)
+vanilla_cm = {
+    "labels": ["Non-Default", "Default"],
+    "matrix": cm_van.tolist(),
+    "tn": int(cm_van[0, 0]), "fp": int(cm_van[0, 1]),
+    "fn": int(cm_van[1, 0]), "tp": int(cm_van[1, 1]),
+}
+
+# Ensemble feature importance (from RandomForest — best individual model)
 importances = rf_model.feature_importances_
-fi_data = sorted(
+ensemble_fi = sorted(
     [{"feature": FEATURE_NAMES[i], "importance": round(float(importances[i]), 6)}
+     for i in range(len(FEATURE_NAMES))],
+    key=lambda x: x["importance"], reverse=True,
+)
+
+# Vanilla MLP feature importance (permutation-based — no built-in attrib for NNs)
+print("Computing vanilla MLP permutation importance...")
+
+
+def _vanilla_probas(X: np.ndarray) -> np.ndarray:
+    """Positive-class probabilities for the vanilla MLP."""
+    with torch.no_grad():
+        return torch.sigmoid(vanilla_mlp(torch.tensor(X, dtype=torch.float32))).numpy()
+
+
+def _permutation_importance(X, y, predict_fn, metric_fn, n_repeats=10, random_state=42):
+    """Simple permutation importance: drop in score when a feature is shuffled."""
+    rng = np.random.RandomState(random_state)
+    baseline = metric_fn(y, predict_fn(X))
+    importances = np.zeros(X.shape[1])
+    for i in range(X.shape[1]):
+        scores = np.zeros(n_repeats)
+        for r in range(n_repeats):
+            X_perm = X.copy()
+            X_perm[:, i] = rng.permutation(X_perm[:, i])
+            scores[r] = baseline - metric_fn(y, predict_fn(X_perm))
+        importances[i] = scores.mean()
+    return importances
+
+
+vanilla_imp = _permutation_importance(
+    X_test_arr, y_test, _vanilla_probas, roc_auc_score,
+    n_repeats=10, random_state=42,
+)
+vanilla_fi = sorted(
+    [{"feature": FEATURE_NAMES[i], "importance": round(float(vanilla_imp[i]), 6)}
      for i in range(len(FEATURE_NAMES))],
     key=lambda x: x["importance"], reverse=True,
 )
@@ -268,8 +312,11 @@ def predict(
 def model_info():
     """Pre-computed metrics, confusion matrix, feature importance."""
     return {
-        "confusion_matrix": cm_data,
-        "feature_importance": fi_data,
+        "api_version": 2,
+        "ensemble_confusion_matrix": ensemble_cm,
+        "vanilla_confusion_matrix": vanilla_cm,
+        "ensemble_feature_importance": ensemble_fi,
+        "vanilla_feature_importance": vanilla_fi,
         "feature_names": FEATURE_NAMES,
         "test_set_size": len(y_test),
         "ensemble_metrics": ENSEMBLE_METRICS,

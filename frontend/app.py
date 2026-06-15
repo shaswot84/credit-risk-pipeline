@@ -29,8 +29,8 @@ PAY_TOOLTIPS = {
 # ---------------------------------------------------------------------------
 # Pre-fetch static model info
 # ---------------------------------------------------------------------------
-@st.cache_data(ttl=3600)
-def fetch_model_info():
+@st.cache_data(ttl=3600, show_spinner=False)
+def fetch_model_info(api_version=1):
     try:
         r = requests.get(f"{API}/model-info", timeout=5)
         if r.ok:
@@ -39,7 +39,7 @@ def fetch_model_info():
         pass
     return None
 
-INFO = fetch_model_info()
+INFO = fetch_model_info(api_version=2)
 
 # ---------------------------------------------------------------------------
 # Speedometer
@@ -180,6 +180,7 @@ with left:
 
         if res.get("models"):
             st.markdown("**Model Votes**")
+            st.caption("Per-model probability breakdown (ensemble only)")
             dfm = pd.DataFrame(
                 {"Model": list(res["models"].keys()), "Prob": list(res["models"].values())}
             ).sort_values("Prob")
@@ -206,7 +207,12 @@ with right:
     # --- Confusion matrix ---
     st.divider()
     st.markdown("### Confusion Matrix")
-    cm = INFO["confusion_matrix"]
+    if MODEL == "ensemble":
+        cm = INFO["ensemble_confusion_matrix"]
+        cm_label = "Ensemble"
+    else:
+        cm = INFO["vanilla_confusion_matrix"]
+        cm_label = "Vanilla MLP"
     cml = cm["labels"]
     cm_df = pd.DataFrame(
         cm["matrix"],
@@ -217,7 +223,8 @@ with right:
     tpr = cm["tp"] / (cm["tp"] + cm["fn"])
     ppv = cm["tp"] / (cm["tp"] + cm["fp"])
     st.caption(
-        f"TN {cm['tn']:,}  FP {cm['fp']:,}  FN {cm['fn']:,}  TP {cm['tp']:,}  "
+        f"{cm_label}  ·  TN {cm['tn']:,}  FP {cm['fp']:,}  "
+        f"FN {cm['fn']:,}  TP {cm['tp']:,}  "
         f"·  Recall {tpr:.1%}  ·  Precision {ppv:.1%}"
     )
 
@@ -238,8 +245,12 @@ with right:
     # --- Feature importance ---
     st.divider()
     st.markdown("### 📈 Feature Importance")
-    st.caption("RandomForest · Mean Decrease in Impurity")
-    fi = INFO["feature_importance"]
+    if MODEL == "ensemble":
+        fi = INFO["ensemble_feature_importance"]
+        st.caption("RandomForest · Mean Decrease in Impurity")
+    else:
+        fi = INFO["vanilla_feature_importance"]
+        st.caption("Vanilla MLP · Permutation Importance (10 repeats)")
     df_fi = pd.DataFrame(fi).set_index("feature")
     st.bar_chart(df_fi, use_container_width=True, height=260)
     st.dataframe(df_fi.style.format("{:.3f}"), use_container_width=True)
