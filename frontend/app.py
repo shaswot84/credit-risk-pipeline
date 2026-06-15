@@ -197,11 +197,44 @@ with right:
     em = INFO["ensemble_metrics"]
     vm = INFO["vanilla_metrics"]
     metrics_df = pd.DataFrame(
-        {"Ensemble (Avg)": [em["auc"], em["ap"], em["brier"], em["precision"], em["recall"], em["f1"]],
-         "Vanilla MLP": [vm["auc"], vm["ap"], vm["brier"], vm["precision"], vm["recall"], vm["f1"]]},
-        index=["AUC-ROC", "Avg Precision", "Brier", "Precision", "Recall", "F1"],
+        {"AUC-ROC": [em["auc"], vm["auc"]],
+         "Avg Precision": [em["ap"], vm["ap"]],
+         "Brier": [em["brier"], vm["brier"]],
+         "Precision": [em["precision"], vm["precision"]],
+         "Recall": [em["recall"], vm["recall"]],
+         "F1": [em["f1"], vm["f1"]]},
+        index=["Ensemble (Avg)", "Vanilla MLP"],
     )
-    st.dataframe(metrics_df.style.format("{:.4f}"), use_container_width=True)
+    st.dataframe(
+        metrics_df.style.format("{:.4f}"),
+        column_config={
+            "AUC-ROC": st.column_config.NumberColumn(
+                "AUC-ROC",
+                help="Area Under the ROC Curve — how well the model ranks defaulters above non-defaulters (0.5=random, 1.0=perfect).",
+            ),
+            "Avg Precision": st.column_config.NumberColumn(
+                "Avg Precision",
+                help="Average Precision (PR AUC) — measures precision across all recall thresholds; more informative than ROC for imbalanced classes.",
+            ),
+            "Brier": st.column_config.NumberColumn(
+                "Brier",
+                help="Brier Score — mean squared error of predicted probabilities (0.0=perfect, ~0.25=naive prediction of 22% base rate). Lower is better.",
+            ),
+            "Precision": st.column_config.NumberColumn(
+                "Precision",
+                help="Precision = TP / (TP + FP) — of all predicted defaults, how many were correct. High precision means fewer false alarms.",
+            ),
+            "Recall": st.column_config.NumberColumn(
+                "Recall",
+                help="Recall = TP / (TP + FN) — of all actual defaulters, how many were caught. High recall means fewer missed defaulters.",
+            ),
+            "F1": st.column_config.NumberColumn(
+                "F1",
+                help="F1 Score — harmonic mean of Precision and Recall (best viewed alongside its components to understand the trade-off).",
+            ),
+        },
+        use_container_width=True,
+    )
     st.caption(f"On {INFO['test_set_size']:,} hold-out samples  ·  threshold = 0.5")
 
     # --- Confusion matrix ---
